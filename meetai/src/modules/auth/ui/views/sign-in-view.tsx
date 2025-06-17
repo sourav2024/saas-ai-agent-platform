@@ -15,21 +15,22 @@ import {
 } from "@/components/ui/form";
 import { FaGoogle, FaGithub } from "react-icons/fa";
 import { Alert, AlertTitle } from "@/components/ui/alert";
-import { OctagonAlert, OctagonAlertIcon } from "lucide-react";
+import { OctagonAlertIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+
 const formSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1, { message: "Password is required" }),
 });
+
 export const SignInView = () => {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<boolean>(false);
-  const router = useRouter()
-
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -38,44 +39,39 @@ export const SignInView = () => {
       password: "",
     },
   });
-   const onSocial = (provider: "github" | "google") =>{
-      setPending(true)
-  
-      authClient.signIn.social({
-          provider: provider,
-          callbackURL: "/"
-      },
-      {
-          onSuccess : () =>{
-              setPending(false);
-              router.push("/")
-          },
-          onError: ({error}) =>{
-             setPending(false)
-             setError(error.message)
-          }
-      }
-  )
-    }
+
+  // ✅ Modified: Use redirect for social login
+  const onSocial = (provider: "github" | "google") => {
+    setPending(true);
+    authClient.signIn.social({
+      provider,
+      // callbackURL: "/",
+    });
+  };
+
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     setError(null);
     setPending(true);
+
     const { error } = await authClient.signIn.email(
       {
         email: data.email,
         password: data.password,
-        callbackURL: "/"
+        // callbackURL: "/",
       },
       {
         onSuccess: () => {
           setPending(false);
+          // router.push("/");
         },
         onError: ({ error }) => {
+          setPending(false);
           setError(error.message);
         },
       }
     );
   };
+
   return (
     <div className="flex flex-col gap-6">
       <Card className="overflow-hidden p-0">
@@ -89,6 +85,7 @@ export const SignInView = () => {
                     Login to your account
                   </p>
                 </div>
+
                 <div className="grid gap-3 ">
                   <FormField
                     control={form.control}
@@ -108,6 +105,7 @@ export const SignInView = () => {
                     )}
                   />
                 </div>
+
                 <div className="grid gap-3 ">
                   <FormField
                     control={form.control}
@@ -127,15 +125,18 @@ export const SignInView = () => {
                     )}
                   />
                 </div>
+
                 {!!error && (
                   <Alert className="bg-destructive/10 border-none">
                     <OctagonAlertIcon className="h-4 w-4 !text-destructive" />
                     <AlertTitle>{error}</AlertTitle>
                   </Alert>
                 )}
+
                 <Button disabled={pending} type="submit" className="w-full">
                   Sign In
                 </Button>
+
                 <div
                   className="after:border-border relative text-center text-sm after:absolute
                 after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t"
@@ -144,15 +145,14 @@ export const SignInView = () => {
                     or Continue with
                   </span>
                 </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <Button
                     disabled={pending}
                     variant={"outline"}
                     type="button"
                     className="w-full"
-                    onClick={() =>{
-                       onSocial("google")
-                    }}
+                    onClick={() => onSocial("google")}
                   >
                     <FaGoogle />
                   </Button>
@@ -161,15 +161,14 @@ export const SignInView = () => {
                     variant={"outline"}
                     type="button"
                     className="w-full"
-                    onClick={() =>{
-                      onSocial("github")
-                    }}
+                    onClick={() => onSocial("github")}
                   >
                     <FaGithub />
                   </Button>
                 </div>
+
                 <div className="text-center text-sm">
-                  Don&apos;t have an acccount?{" "}
+                  Don&apos;t have an account?{" "}
                   <Link
                     href={"/sign-up"}
                     className="underline underline-offset-4 text-blue-700"
@@ -180,6 +179,7 @@ export const SignInView = () => {
               </div>
             </form>
           </Form>
+
           <div className="bg-radial from-green-700 to-green-900 relative hidden md:flex flex-col gap-y-4 items-center justify-center ">
             <img src={"/logo.svg"} alt="Image" className="h-[92px] w-[92px]" />
             <p className="text-2xl font-semibold text-white">Meet.AI</p>
@@ -192,8 +192,8 @@ export const SignInView = () => {
         text-balance *:[a]:underline *:[a]:underline-offset-4"
       >
         By clicking Continue, you agree to our{" "}
-        <a href="#">Terms and Conditons </a> and
-        <a href="#"> Privacy Policy</a>
+        <a href="#">Terms and Conditions</a> and{" "}
+        <a href="#">Privacy Policy</a>
       </div>
     </div>
   );
